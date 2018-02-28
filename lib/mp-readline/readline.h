@@ -26,6 +26,10 @@
 #ifndef MICROPY_INCLUDED_LIB_MP_READLINE_READLINE_H
 #define MICROPY_INCLUDED_LIB_MP_READLINE_READLINE_H
 
+#ifdef CONFIG_NSH_READLINE
+#define readline(a,b)   readline_(a,b)
+#endif
+
 #define CHAR_CTRL_A (1)
 #define CHAR_CTRL_B (2)
 #define CHAR_CTRL_C (3)
