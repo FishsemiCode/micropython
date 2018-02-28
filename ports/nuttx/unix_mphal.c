@@ -36,6 +36,10 @@
 #ifndef _WIN32
 #include <signal.h>
 
+#ifndef SIGINT
+#define SIGINT 2
+#endif
+
 STATIC void sighandler(int signum) {
     if (signum == SIGINT) {
         #if MICROPY_ASYNC_KBD_INTR

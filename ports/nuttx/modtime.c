@@ -46,6 +46,7 @@ static inline int msec_sleep_tv(struct timeval *tv) {
 }
 #define sleep_select(a,b,c,d,e) msec_sleep_tv((e))
 #else
+#include <sys/select.h>
 #define sleep_select select
 #endif
 
@@ -139,7 +140,11 @@ STATIC mp_obj_t mod_time_localtime(size_t n_args, const mp_obj_t *args) {
     }
     struct tm *tm = localtime(&t);
 
+    #if CONFIG_TIME_EXTENDED
     mp_obj_t ret = mp_obj_new_tuple(9, NULL);
+    #else
+    mp_obj_t ret = mp_obj_new_tuple(6, NULL);
+    #endif
 
     mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(ret);
     tuple->items[0] = MP_OBJ_NEW_SMALL_INT(tm->tm_year + 1900);
@@ -148,6 +153,7 @@ STATIC mp_obj_t mod_time_localtime(size_t n_args, const mp_obj_t *args) {
     tuple->items[3] = MP_OBJ_NEW_SMALL_INT(tm->tm_hour);
     tuple->items[4] = MP_OBJ_NEW_SMALL_INT(tm->tm_min);
     tuple->items[5] = MP_OBJ_NEW_SMALL_INT(tm->tm_sec);
+    #if CONFIG_TIME_EXTENDED
     int wday = tm->tm_wday - 1;
     if (wday < 0) {
         wday = 6;
@@ -155,6 +161,7 @@ STATIC mp_obj_t mod_time_localtime(size_t n_args, const mp_obj_t *args) {
     tuple->items[6] = MP_OBJ_NEW_SMALL_INT(wday);
     tuple->items[7] = MP_OBJ_NEW_SMALL_INT(tm->tm_yday + 1);
     tuple->items[8] = MP_OBJ_NEW_SMALL_INT(tm->tm_isdst);
+    #endif
 
     return ret;
 }

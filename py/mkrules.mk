@@ -134,7 +134,7 @@ ifndef DEBUG
 endif
 	$(Q)$(SIZE) $$(find $(BUILD) -path "$(BUILD)/build/frozen*.o") $(PROG)
 
-clean: clean-prog
+clean:: clean-prog
 clean-prog:
 	$(RM) -f $(PROG)
 	$(RM) -f $(PROG).map
@@ -153,7 +153,7 @@ lib $(LIBMICROPYTHON): $(OBJ)
 	$(AR) rcs $(LIBMICROPYTHON) $^
 	$(LIBMICROPYTHON_EXTRA_CMD)
 
-clean:
+clean::
 	$(RM) -rf $(BUILD) $(CLEAN_EXTRA)
 .PHONY: clean
 

@@ -56,10 +56,11 @@ STATIC uint emit_opt = MP_EMIT_OPT_NONE;
 #if MICROPY_ENABLE_GC
 // Heap size of GC heap (if enabled)
 // Make it larger on a 64 bit machine, because pointers are larger.
-long heap_size = 1024*1024 * (sizeof(mp_uint_t) / 4);
+long heap_size = 1024 * 20 * (sizeof(mp_uint_t) / 4);
 #endif
 
 STATIC void stderr_print_strn(void *env, const char *str, size_t len) {
+#define STDERR_FILENO 2
     (void)env;
     ssize_t dummy = write(STDERR_FILENO, str, len);
     mp_uos_dupterm_tx_strn(str, len);
@@ -403,7 +404,11 @@ STATIC void set_sys_argv(char *argv[], int argc, int start_arg) {
 
 MP_NOINLINE int main_(int argc, char **argv);
 
+#if !defined(CONFIG_BUILD_KERNEL)
+int micropython_main(int argc, char **argv) {
+#else
 int main(int argc, char **argv) {
+#endif
     #if MICROPY_PY_THREAD
     mp_thread_init();
     #endif
@@ -598,7 +603,7 @@ MP_NOINLINE int main_(int argc, char **argv) {
             }
         } else {
             char *pathbuf = malloc(PATH_MAX);
-            char *basedir = realpath(argv[a], pathbuf);
+            char *basedir = argv[a];
             if (basedir == NULL) {
                 mp_printf(&mp_stderr_print, "%s: can't open file '%s': [Errno %d] %s\n", argv[0], argv[a], errno, strerror(errno));
                 // CPython exits with 2 in such case
@@ -645,7 +650,7 @@ MP_NOINLINE int main_(int argc, char **argv) {
     return ret & 0xff;
 }
 
-uint mp_import_stat(const char *path) {
+mp_import_stat_t mp_import_stat(const char *path) {
     struct stat st;
     if (stat(path, &st) == 0) {
         if (S_ISDIR(st.st_mode)) {
