@@ -150,14 +150,26 @@ STATIC mp_obj_t esp_disconnect(mp_obj_t self_in) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(esp_disconnect_obj, esp_disconnect);
 
-STATIC mp_obj_t esp_status(mp_obj_t self_in) {
-    wlan_if_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    if (self->if_id == STATION_IF) {
-        return MP_OBJ_NEW_SMALL_INT(wifi_station_get_connect_status());
+STATIC mp_obj_t esp_status(size_t n_args, const mp_obj_t *args) {
+    wlan_if_obj_t *self = MP_OBJ_TO_PTR(args[0]);
+    if (n_args == 1) {
+        // Get link status
+        if (self->if_id == STATION_IF) {
+            return MP_OBJ_NEW_SMALL_INT(wifi_station_get_connect_status());
+        }
+        return MP_OBJ_NEW_SMALL_INT(-1);
+    } else {
+        // Get specific status parameter
+        switch (mp_obj_str_get_qstr(args[1])) {
+            case MP_QSTR_rssi:
+                if (self->if_id == STATION_IF) {
+                    return MP_OBJ_NEW_SMALL_INT(wifi_station_get_rssi());
+                }
+        }
+        mp_raise_ValueError("unknown status param");
     }
-    return MP_OBJ_NEW_SMALL_INT(-1);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(esp_status_obj, esp_status);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(esp_status_obj, 1, 2, esp_status);
 
 STATIC mp_obj_t *esp_scan_list = NULL;
 
@@ -410,8 +422,11 @@ STATIC mp_obj_t esp_config(size_t n_args, const mp_obj_t *args, mp_map_t *kwargs
             return mp_obj_new_bytes(mac, sizeof(mac));
         }
         case MP_QSTR_essid:
-            req_if = SOFTAP_IF;
-            val = mp_obj_new_str((char*)cfg.ap.ssid, cfg.ap.ssid_len);
+            if (self->if_id == STATION_IF) {
+                val = mp_obj_new_str((char*)cfg.sta.ssid, strlen((char*)cfg.sta.ssid));
+            } else {
+                val = mp_obj_new_str((char*)cfg.ap.ssid, cfg.ap.ssid_len);
+            }
             break;
         case MP_QSTR_hidden:
             req_if = SOFTAP_IF;
